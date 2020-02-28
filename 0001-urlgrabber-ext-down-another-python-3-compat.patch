@@ -1,0 +1,48 @@
+From e7a01334f653661c657d4c4e6e1ad10aababfb5b Mon Sep 17 00:00:00 2001
+From: Pavel Raiskup <praiskup@redhat.com>
+Date: Sun, 12 May 2019 08:54:01 +0200
+Subject: [PATCH] urlgrabber-ext-down: another python 3 compat
+
+Expect that _readlines() returns array of bytes objects in
+Python 3 environments.
+
+Fixes rhbz #1707657 and #1688173
+---
+ scripts/urlgrabber-ext-down | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/urlgrabber-ext-down b/scripts/urlgrabber-ext-down
+index bbaebd5..13d6dc7 100755
+--- a/scripts/urlgrabber-ext-down
++++ b/scripts/urlgrabber-ext-down
+@@ -19,12 +19,17 @@
+ #      Boston, MA  02111-1307  USA
+ 
+ import time, os, errno, sys
++import six
+ from urlgrabber.grabber import \
+     _readlines, URLGrabberOptions, _loads, \
+     PyCurlFileObject, URLGrabError
+ 
+ def write(fmt, *arg):
+-    try: os.write(1, fmt % arg)
++    buf = fmt % arg
++    if six.PY3:
++        buf = buf.encode()
++    try:
++        os.write(1, buf)
+     except OSError as e:
+         if e.args[0] != errno.EPIPE: raise
+         sys.exit(1)
+@@ -46,6 +51,8 @@ def main():
+         lines = _readlines(0)
+         if not lines: break
+         for line in lines:
++            if not isinstance(line, six.string_types):
++                line = line.decode('utf-8')
+             cnt += 1
+             opts = URLGrabberOptions()
+             opts._id = cnt
+-- 
+2.21.0
+

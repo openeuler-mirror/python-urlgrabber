@@ -1,0 +1,40 @@
+From 7607b9f408b71b6533ca4f8e8808090a5b930555 Mon Sep 17 00:00:00 2001
+From: Michal Domonkos <mdomonko@redhat.com>
+Date: Mon, 20 May 2019 15:06:38 +0200
+Subject: [PATCH 2/4] Revert "Simplify mirror conversion to utf8"
+
+This reverts commit be8ee10e35319e80200d4ff384434d46fe7783d9.
+
+A list of dicts (as opposed to strings) is valid input as well; see the
+module-level doc string for details (section 2 under CUSTOMIZATION).  In
+fact, the nested estimate() function in MirrorGroup.__init__() accounts
+for that, too.
+
+This fixes a traceback in YUM which does pass such a dict list.
+
+Closes #10.
+---
+ urlgrabber/mirror.py | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/urlgrabber/mirror.py b/urlgrabber/mirror.py
+index 75f0bcb..d95863e 100644
+--- a/urlgrabber/mirror.py
++++ b/urlgrabber/mirror.py
+@@ -297,7 +297,12 @@ class MirrorGroup:
+         self.default_action   = kwargs.get('default_action')
+ 
+     def _parse_mirrors(self, mirrors):
+-        return [{'mirror':_to_utf8(m)} for m in mirrors]
++        parsed_mirrors = []
++        for m in mirrors:
++            if isinstance(m, string_types):
++                m = {'mirror': _to_utf8(m)}
++            parsed_mirrors.append(m)
++        return parsed_mirrors
+ 
+     def _load_gr(self, gr):
+         # OVERRIDE IDEAS:
+-- 
+2.21.0
+

@@ -1,0 +1,56 @@
+From c696255c5f50341688d718b3547efb1a9971927b Mon Sep 17 00:00:00 2001
+From: Michal Domonkos <mdomonko@redhat.com>
+Date: Tue, 21 May 2019 11:12:12 +0200
+Subject: [PATCH 3/4] urlgrabber-ext-down: convert url into bytes
+
+We need to convert the parsed url back into bytes before passing it to
+the PyCurlFileObject constructor (since _set_opts() expects self.scheme,
+constructed from the url, to be a bytes object).
+
+This caused the unit test "bypassing proxy cache on failure" to fail
+(together with a bug in the test itself which is also being fixed here).
+
+Closes #14.
+---
+ scripts/urlgrabber-ext-down | 4 ++--
+ test/test_mirror.py         | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/scripts/urlgrabber-ext-down b/scripts/urlgrabber-ext-down
+index 13d6dc7..40469a7 100755
+--- a/scripts/urlgrabber-ext-down
++++ b/scripts/urlgrabber-ext-down
+@@ -22,7 +22,7 @@ import time, os, errno, sys
+ import six
+ from urlgrabber.grabber import \
+     _readlines, URLGrabberOptions, _loads, \
+-    PyCurlFileObject, URLGrabError
++    PyCurlFileObject, URLGrabError, _to_utf8
+ 
+ def write(fmt, *arg):
+     buf = fmt % arg
+@@ -65,7 +65,7 @@ def main():
+ 
+             dlsz = dltm = 0
+             try:
+-                fo = PyCurlFileObject(opts.url, opts.filename, opts)
++                fo = PyCurlFileObject(_to_utf8(opts.url), opts.filename, opts)
+                 fo._do_grab()
+                 fo.fo.close()
+                 size = fo._amount_read
+diff --git a/test/test_mirror.py b/test/test_mirror.py
+index a2daf19..66cafd0 100644
+--- a/test/test_mirror.py
++++ b/test/test_mirror.py
+@@ -350,7 +350,7 @@ class HttpReplyCode(TestCase):
+                 self.content = b'version1'
+ 
+         def checkfunc_read(obj):
+-            if obj.data == 'version1':
++            if obj.data == b'version1':
+                 raise URLGrabError(-1, 'Outdated version of foo')
+ 
+         def checkfunc_grab(obj):
+-- 
+2.21.0
+
