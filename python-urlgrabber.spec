@@ -1,6 +1,6 @@
 Name:          python-urlgrabber
 Version:       4.0.0
-Release:       3
+Release:       4
 Summary:       Cross-protocol urlgrabber
 License:       LGPLv2+
 Url:           http://urlgrabber.baseurl.org/
@@ -45,9 +45,12 @@ rm -rf $RPM_BUILD_ROOT/%{_docdir}/urlgrabber-%{version}
 %{_bindir}/urlgrabber
 %{_libexecdir}/urlgrabber-ext-down
 %{python3_sitelib}/urlgrabber
-%{python3_sitelib}/urlgrabber-%{version}-py?.??.egg-info
+%{python3_sitelib}/urlgrabber-%{version}-py?.*.egg-info
 
 %changelog
+* Tue Feb 15 2022 YukariChiba<i@0x7f.cc> - 4.0.1-4
+- Fix egg-info path
+
 * Sat Dec 18 2021 shixuantong<shixuantong@huawei.com> - 4.0.1-3
 - fix build fail
 
